@@ -36,4 +36,4 @@ Some folders like `examples` or `src` might be missing. After tool ##tool.name##
 
 ### Troubleshooting
 
-If you're having trouble, try contacting the author [##author.name##](##author.url##).
+If you're having trouble, try contacting the author.
