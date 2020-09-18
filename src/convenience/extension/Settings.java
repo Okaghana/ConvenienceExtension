@@ -3,13 +3,14 @@ package convenience.extension;
 import processing.core.PApplet;
 
 import g4p_controls.*;
+import java.awt.Font;
 
 public class Settings extends PApplet {
 
 	private static ConvenienceExtension parent;
-
-	GLabel label;
-	GCheckbox closeBrackets;
+	
+	GCheckbox doCloseBrackets; 
+	GCheckbox doAutocomplete; 
 
 	public static void run(ConvenienceExtension _parent) {
 		parent = _parent;
@@ -23,12 +24,28 @@ public class Settings extends PApplet {
 	}
 
 	public void setup() {
-		label = new GLabel(this, 10, 15, 100, 15, "Settings");
-		closeBrackets = new GCheckbox(this, 20, 30, 200, 60, "Close Brackets?");
-
+	  G4P.messagesEnabled(false);
+	  G4P.setGlobalColorScheme(GCScheme.BLUE_SCHEME);
+	  G4P.setMouseOverEnabled(false);
+	  surface.setTitle("Sketch Window");
+	  this.noLoop();
+	  doCloseBrackets = new GCheckbox(this, 20, 20, 300, 40);
+	  doCloseBrackets.setIconAlign(GAlign.LEFT, GAlign.MIDDLE);
+	  doCloseBrackets.setText("Close Brackets");
+	  doCloseBrackets.setOpaque(false);
+	  doAutocomplete = new GCheckbox(this, 20, 60, 300, 40);
+	  doAutocomplete.setIconAlign(GAlign.LEFT, GAlign.MIDDLE);
+	  doAutocomplete.setText("Autocomplete");
+	  doAutocomplete.setOpaque(false);
+	  
 		parent.setSettings(false);
 	}
 
 	public void draw() {
+	}
+	
+	// Intercept Exit-Command or IDE will be closed to
+	public void exit() {
+		dispose();
 	}
 }
