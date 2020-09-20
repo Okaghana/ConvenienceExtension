@@ -6,72 +6,80 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class BracketCloser implements KeyListener {
-	Editor editor;
-
-	// needed to remove double brackets (when typing too fast)
-	char lastChar;
-
-	// define which characters should get closed
-	char[] openingChar = { '(', '[', '{', '"', '\'' };
-	char[] closingChar = { ')', ']', '}', '"', '\'' };
-
+	
+	private Editor editor;
+	
+	// define which characters should get closed and with what
+	// for the sake of understanding all opening or closing chars will be called "brackets"
+	private char[] openingChars = { '(', '[', '{', '"', '\'' };
+	private char[] closingChars = { ')', ']', '}', '"', '\'' };
+	
+	// Indentation Depth
+	private String tabSpace = "    ";
+	private long methonLastCalled = 0L;
+	
+	public  boolean isRunning = true;
+	
 	public BracketCloser(Editor _editor) {
 		editor = _editor;
 		editor.getTextArea().addKeyListener(this);
 	}
-
-	public void update(char key) {
-		// loop through array of opening brackets to trigger completion
-		for (int i = 0; i < openingChar.length; i++) {
-			// if nothing is selected just add closing bracket, else wrap brackets around
-			// selection
-			if (!editor.isSelectionActive()) {
-				if (key == openingChar[i])
-					addClosingChar(i);
-				else if (key == closingChar[i] && lastChar == openingChar[i])
-					removeClosingChar(i);
-			} else if (key == openingChar[i] && editor.isSelectionActive())
-				addClosingChar(i, editor.getSelectionStart(), editor.getSelectionStop());
+	
+	public void keyPressed(KeyEvent key) {
+		if (!isRunning) return;
+		
+		// Check if pressed key is in openingChars
+		for (int i = 0; i < openingChars.length; i++) {
+			// Close Brackets
+			if (key.getKeyChar() == openingChars[i]) {
+				// Place around selection if there is one.
+				if (editor.isSelectionActive()) {
+					addFullBracket(i);
+				} else {
+					addClosingBracket(i);
+				}
+			} else if (key.getKeyCode() ==  KeyEvent.VK_ENTER) {
+				if (System.currentTimeMillis() - methonLastCalled >= 50)  // Apply cooldown because methods gets fired multiple times
+					repositionBracket();
+				methonLastCalled = System.currentTimeMillis();
+	
+			}
+			
 		}
 	}
 
-	// add closing bracket and set caret inside brackets
-	private void addClosingChar(int index) {
-		editor.insertText(Character.toString(closingChar[index]));
+	// add closing bracket and set cursor inside the brackets
+	private void addClosingBracket(int index) {
+		editor.insertText("" + closingChars[index]);
 
-		int cursorPos = editor.getCaretOffset();
-		editor.setSelection(cursorPos - 1, cursorPos - 1);
-		lastChar = openingChar[index];
+		int cursorPosition = editor.getCaretOffset();
+		editor.setSelection(cursorPosition - 1, cursorPosition - 1);  // Start end End of Selection are the same
 	}
 
-	// if something is selected wrap closing brackets around selection
-	private void addClosingChar(int positionOfChar, int startSelection, int endSelection) {
-		editor.setSelection(endSelection, endSelection);
-		editor.insertText(Character.toString(closingChar[positionOfChar]));
-		editor.setSelection(startSelection, startSelection);
-		lastChar = openingChar[positionOfChar];
+	private void addFullBracket(int index) {
+		int selectionStart = editor.getSelectionStart();
+		int selectionEnd = editor.getSelectionStop();
+		
+		// The closing char will be placed before the IDE can place the opening char
+		editor.setSelection(selectionEnd, selectionEnd);
+		editor.insertText(Character.toString(closingChars[index]));
+		editor.setSelection(selectionStart, selectionStart);	// So we have to place the cursor at the beginning
 	}
-
-	// prevents something like ()) when typing too fast
-	private void removeClosingChar(int positionOfChar) {
-		// return if character is ' or "
-		if (closingChar[positionOfChar] == '\'' || closingChar[positionOfChar] == '"')
-			return;
-
-		String sketchContent = editor.getText();
-		int cursorPos = editor.getCaretOffset();
-
-		String newContent1 = sketchContent.substring(0, cursorPos);
-		String newContent2 = sketchContent.substring(cursorPos + 1, sketchContent.length());
-
-		editor.setText(newContent1 + newContent2);
-		editor.setSelection(cursorPos, cursorPos);
-
-		lastChar = closingChar[positionOfChar];
-	}
-
-	public void keyPressed(KeyEvent key) {
-		update(key.getKeyChar());
+	
+	private void repositionBracket() {
+		int cursorPosition = editor.getCaretOffset();
+		
+		if (cursorPosition == 0 || cursorPosition == editor.getText().length()) return;
+		
+		char charBefore = editor.getText(cursorPosition - 1, cursorPosition).charAt(0);
+		char charAfter =  editor.getText(cursorPosition, cursorPosition + 1).charAt(0);
+		
+		// Only continue if the chars before and after the cursors are brackets
+		for (int i = 0; i < openingChars.length; i++) {
+			if(openingChars[i] == charBefore && closingChars[i] == charAfter) {
+				editor.insertText("\n" + tabSpace);
+			}
+		}
 	}
 
 	public void keyReleased(KeyEvent key) {

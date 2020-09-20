@@ -19,9 +19,11 @@
  * Boston, MA  02111-1307  USA
  *
  * @author   Okaghana
- * @modified 15.09.2020
- * @version  0.1
+ * @modified 20.09.2020
+ * @version  1.0
  */
+
+// General TODO: Add Javadoc, tool and documentation itself.
 
 package convenience.extension;
 
@@ -35,17 +37,17 @@ public class ConvenienceExtension implements Tool {
 	private final String AUTHOR = "Okaghana";
 	private final String URL = "https://github.com/Okaghana/ConvenienceExtension";
 
-	Base base;
-	Editor editor;
-	BracketCloser bracketCloser;
-	Settings settings;
+	private Base base;
+	private Editor editor;
+	
+	public BracketCloser bracketCloser;
+	public Settings settings;
+	public Autocomplete autocomplete;
 
-	boolean isRunning = false;
-	boolean closeBrackets = true;
-	boolean askForDocumentation = true;
+	public boolean isRunning = false;
 
-	public void init(Base base) {
-		this.base = base;
+	public void init(Base _base) {
+		base = _base;
 	}
 
 	public void run() {
@@ -53,20 +55,17 @@ public class ConvenienceExtension implements Tool {
 
 		if (!isRunning) {
 			bracketCloser = new BracketCloser(editor);
+			autocomplete = new Autocomplete(editor);
 
 			isRunning = true;
 			System.out.println("" + NAME + ". Version " + VERSION + ". Author " + AUTHOR + "  " + URL);
 		} else {
 			Settings.run(this);
-			System.out.println("" + NAME + " is already running. Running Settings instead");
+			System.out.println("" + NAME + " is already running. Opening Settings instead");
 		}
 	}
 
 	public String getMenuTitle() {
 		return NAME;
-	}
-
-	public void setSettings(boolean doCloseBrackets) {
-
 	}
 }
